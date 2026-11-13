@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "login512-mcp"
+version = "2.1.0"
+description = "Official Model Context Protocol (MCP) server for Login512 Post-Quantum Biometrics and Passkeys"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    { name = "Login512 Engineering", email = "developer@login512.com" }
+]
+keywords = ["mcp", "model-context-protocol", "biometrics", "passkey", "claude", "cursor"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Topic :: Security :: Cryptography"
+]
+
+[project.scripts]
+login512-mcp = "server:main"
