@@ -474,6 +474,23 @@ TOOLS = [
             "required": ["code"],
         },
     },
+    {
+        "name": "login512_setup_2fa_and_genesis",
+        "description": "Generates drop-in code to replace legacy TOTP / Google Authenticator with Login512 Biometric 2FA (Face + Fingerprint/Passkey), adds the 'Use Login512 instead of legacy Password/LINE/Google next time' one-click upgrade toggle, and configures First-Time Genesis Mode for initial passwordless Superadmin registration.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "framework": {
+                    "type": "string",
+                    "description": "Target framework or language (e.g., 'react', 'nextjs', 'html5', 'fastapi', 'laravel', 'node_express')",
+                },
+                "mode": {
+                    "type": "string",
+                    "description": "Integration mode: '2fa_upgrade', 'genesis_first_boot', or 'both' (default: 'both')",
+                },
+            },
+        },
+    },
 ]
 
 ALIASES: dict[str, str] = {
@@ -716,6 +733,71 @@ def audit_code(code: str, filename: Optional[str] = None) -> dict[str, Any]:
     }
 
 
+def setup_2fa_and_genesis(framework: str = "html5", mode: str = "both") -> dict[str, Any]:
+    """Generates drop-in code for Login512 2FA (TOTP replacement + Primary Upgrade) & First-Time Genesis Mode."""
+    fw = (framework or "html5").strip().lower()
+    m = (mode or "both").strip().lower()
+    result: dict[str, Any] = {
+        "framework": fw,
+        "mode": m,
+        "guide_url": "https://login512.com/guide.html#ch3-2fa-totp",
+    }
+
+    if m in ("2fa_upgrade", "both"):
+        result["totp_replacement_2fa"] = {
+            "summary": "Drop-in replacement for 6-digit TOTP / Google Authenticator. Supports Face Scan + Low-Light Fingerprint/Passkey and one-click Primary Login512 Upgrade to skip legacy Password / LINE / Google on future logins.",
+            "api_endpoints": [
+                "POST https://login512.com/v1/2fa/enroll-token",
+                "POST https://login512.com/v1/2fa/verify",
+                "POST https://login512.com/v1/2fa/upgrade-primary",
+                "GET  https://login512.com/v1/2fa/status/{external_user_id}",
+            ],
+            "frontend_snippet": """<script src="https://login512.com/sdk/login512-sdk.js"></script>
+<link rel="stylesheet" href="https://login512.com/sdk/login512-sdk.css">
+<div id="login512-2fa-slot"></div>
+<script>
+const sdk = Login512.init({ publishableKey: 'l512_pk_live_your_key' });
+// 1. Auto-skip legacy Password / LINE / Google if user previously upgraded
+const pref = sdk.shouldBypassLegacyLogin();
+if (pref.bypass) {
+  sdk.verify2FA({ externalUserId: pref.externalUserId, method: 'face', upgradeToPrimary: true })
+     .then(res => window.location.href = '/dashboard');
+} else {
+  // 2. Render 2FA (Face + Low-Light Passkey) + Upgrade Toggle after Password/LINE/Google login
+  sdk.mount2FA('#login512-2fa-slot', {
+    externalUserId: currentLoggedInUser.id,
+    onSuccess: (res) => { window.location.href = '/dashboard'; }
+  });
+}
+</script>""",
+        }
+
+    if m in ("genesis_first_boot", "both"):
+        result["first_time_genesis_mode"] = {
+            "summary": "Zero-password initial Superadmin registration (replaces default admin/admin123). Auto-detects 0 admins, verifies One-Time Genesis Setup Key, binds Superadmin via Face or Passkey, and permanently seals Genesis Mode.",
+            "api_endpoints": [
+                "GET  https://login512.com/v1/genesis/status",
+                "POST https://login512.com/v1/genesis/enroll-token",
+                "POST https://login512.com/v1/genesis/claim",
+            ],
+            "frontend_snippet": """<div id="genesis-setup"></div>
+<script>
+const sdk = Login512.init({ publishableKey: 'l512_pk_live_your_key' });
+fetch('https://login512.com/v1/genesis/status', {
+  headers: { 'Authorization': 'Bearer l512_pk_live_your_key' }
+}).then(r => r.json()).then(st => {
+  if (st.genesis_required) {
+    sdk.mountGenesisSetup('#genesis-setup', {
+      onSuccess: () => window.location.href = '/admin'
+    });
+  }
+});
+</script>""",
+        }
+
+    return result
+
+
 def main():
     while True:
         try:
@@ -761,6 +843,11 @@ def main():
                 output = list_sdks(arguments.get("category", "all"))
             elif tool_name == "login512_audit_code":
                 output = audit_code(arguments.get("code", ""), arguments.get("filename"))
+            elif tool_name == "login512_setup_2fa_and_genesis":
+                output = setup_2fa_and_genesis(
+                    arguments.get("framework", "html5"),
+                    arguments.get("mode", "both"),
+                )
             else:
                 output = {"error": f"Unknown tool: {tool_name}"}
 

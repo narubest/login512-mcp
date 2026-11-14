@@ -16,6 +16,7 @@ Enables AI Coding Agents (**Cursor**, **Claude Desktop**, **Windsurf**, **VS Cod
 * **⚡ `login512_get_instructions`**: Returns exact package URLs (`.tgz`, `.tar.gz`, `.zip`), CLI installation commands, and ready-to-run boilerplate code.
 * **📦 `login512_list_sdks`**: Lists all 28 official Login512 client and server SDKs with live download endpoints.
 * **🛡️ `login512_audit_code`**: Audits integration code to enforce Zero-Image camera privacy and prevent Secret Key (`l512_sk_...`) exposure in client-side code.
+* **🔐 `login512_setup_2fa_and_genesis`**: Generates drop-in code for **2FA replacing 6-digit TOTP / Google Authenticator** (with Face Scan + Low-Light Fingerprint/Passkey fallback and **One-Click Primary Login512 Upgrade** to bypass legacy Password/LINE/Google next time) and **First-Time Genesis Mode** (100% passwordless initial Superadmin claim with One-Time Genesis Setup Key & auto-seal).
 
 ---
 
@@ -82,6 +83,12 @@ The AI will automatically:
 2. Install the matching package (e.g. `npm install https://login512.com/packages/nextjs.tgz`).
 3. Generate the biometric component and backend token verification route.
 4. Run `login512_audit_code` to verify that your secret keys are safe.
+
+Or for **drop-in TOTP replacement & First-Time Genesis Mode**:
+
+> *"Add Login512 2FA to replace Google Authenticator / TOTP alongside our existing Password/LINE/Google login with a one-click Primary Login512 Upgrade button, plus First-Time Genesis Mode for initial passwordless Superadmin setup."*
+
+The AI will call `login512_setup_2fa_and_genesis` (with `mode: "2fa_upgrade"`, `"genesis_first_boot"`, or `"both"`) to generate ready-to-use `sdk.mount2FA()`, `sdk.shouldBypassLegacyLogin()`, and `sdk.mountGenesisSetup()` snippets wired to `/v1/2fa/*` and `/v1/genesis/*`.
 
 ---
 
