@@ -22,6 +22,11 @@ Enables AI Coding Agents (**Cursor**, **Claude Desktop**, **Windsurf**, **VS Cod
 
 ## 🛠️ Quick Installation
 
+Two ways, both with only Python 3 (no packages):
+
+* **Always the latest version (recommended):** the configs below fetch the server from login512.com each time the AI client starts. The request sends `User-Agent: login512-mcp`; without it Cloudflare answers 403.
+* **Download once:** `curl -s https://login512.com/mcp-server.py -o login512_mcp.py`, then use `"command": "python", "args": ["login512_mcp.py"]` (or `claude mcp add login512 python login512_mcp.py`). Download again to update.
+
 ### 1. Cursor IDE
 Add to your project's `.cursor/mcp.json` (or in Cursor Settings > Features > MCP Servers):
 ```json
@@ -29,7 +34,7 @@ Add to your project's `.cursor/mcp.json` (or in Cursor Settings > Features > MCP
   "mcpServers": {
     "login512": {
       "command": "python",
-      "args": ["-c", "import urllib.request; exec(urllib.request.urlopen('https://login512.com/sdk-ai/mcp-server/server.py').read().decode('utf-8'))"]
+      "args": ["-c", "import urllib.request as u; exec(u.urlopen(u.Request('https://login512.com/sdk-ai/mcp-server/server.py', headers={'User-Agent': 'login512-mcp'})).read().decode('utf-8'))"]
     }
   }
 }
@@ -45,7 +50,7 @@ Add to your `claude_desktop_config.json`:
   "mcpServers": {
     "login512": {
       "command": "python",
-      "args": ["-c", "import urllib.request; exec(urllib.request.urlopen('https://login512.com/sdk-ai/mcp-server/server.py').read().decode('utf-8'))"]
+      "args": ["-c", "import urllib.request as u; exec(u.urlopen(u.Request('https://login512.com/sdk-ai/mcp-server/server.py', headers={'User-Agent': 'login512-mcp'})).read().decode('utf-8'))"]
     }
   }
 }
@@ -58,7 +63,7 @@ Add to `~/.codeium/windsurf/mcp_config.json` (or `%USERPROFILE%\.codeium\windsur
   "mcpServers": {
     "login512": {
       "command": "python",
-      "args": ["-c", "import urllib.request; exec(urllib.request.urlopen('https://login512.com/sdk-ai/mcp-server/server.py').read().decode('utf-8'))"]
+      "args": ["-c", "import urllib.request as u; exec(u.urlopen(u.Request('https://login512.com/sdk-ai/mcp-server/server.py', headers={'User-Agent': 'login512-mcp'})).read().decode('utf-8'))"]
     }
   }
 }
@@ -67,7 +72,7 @@ Add to `~/.codeium/windsurf/mcp_config.json` (or `%USERPROFILE%\.codeium\windsur
 ### 4. Claude Code CLI (Terminal)
 Run in your terminal:
 ```bash
-claude mcp add login512 python -c "import urllib.request; exec(urllib.request.urlopen('https://login512.com/sdk-ai/mcp-server/server.py').read().decode('utf-8'))"
+claude mcp add login512 -- python -c "import urllib.request as u; exec(u.urlopen(u.Request('https://login512.com/sdk-ai/mcp-server/server.py', headers={'User-Agent': 'login512-mcp'})).read().decode('utf-8'))"
 ```
 
 ---
